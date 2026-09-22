@@ -56,7 +56,7 @@ class Flashlight {
 
   use_secondary() {
     
-    this.battery += fps / 10;
+    this.battery += fps / 10; // 500 coin batteries
   }
 
   battery_decay() {
@@ -108,7 +108,9 @@ class Shotgun {
 
   use_secondary() {
     if (this.ammo < max_ammo) {
-      this.chambering = fps / 10;
+      this.chambering = fps / 100;
+      setTimeout(() => {}, 500 / fps);
+
       ammo++;
     }
   }
@@ -130,6 +132,11 @@ class Heal {
 
   use_secondary() {
 
+      enemies_hit = shoot();
+
+      for (const i in enemies_hit){
+        i.hit(5);
+      }
       return;
     
   }
@@ -203,7 +210,9 @@ function update() {
   shotgun.chamber_ammo();
   if (flashlight.is_on == true) flashlight.battery_decay();
 
-  setTimeout(update, 1000 / fps);
+
+  update_scene();
+
 }
 
-setTimeout(update, 1000 / fps);
+setInterval(update, 1000 / fps);
