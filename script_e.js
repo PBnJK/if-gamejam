@@ -7,7 +7,24 @@ Horácio
 
 */
 
+const max_hp = 2;
+const max_ammo = 6;
+const max_battery = 60;
+const effective_heal = 1;
 const fps = 24;
+const blast_radius_low = 50;
+const blast_radius_high = 100;
+
+let blast_radius = blast_radius_low;
+
+
+const flashlight_radius_low = 128;
+const flashlight_radius_high = 256;
+let flashlight_radius = flashlight_radius_low;
+
+const light_radius_low = 75;
+const light_radius_high = 150;
+let light_radius = light_radius_low;
 
 class Player {
   constructor() {
@@ -18,72 +35,118 @@ class Player {
 
 class Flashlight {
   constructor() {
-    this.battery = 60 * fps;
-  }
-
-  battery_decay() {
-    this.battery--;
-  }
-}
-
-class Item {
-  constructor() {}
-
-  use_primary() {}
-
-  use_secondary() {}
-}
-
-class Shotgun extends Item {
-  constructor() {
-    super();
-    this.ammo = 6;
+    this.battery = max_battery * fps;
+    this.is_on = false;
   }
 
   use_primary() {
-    const enemies_hit = shoot(mouse_x, mouse_y, 50);
+
+    if (is_on == true) {
+      light_off();
+
+      this.is_on = false;
+      return;
+    }
+
+    if (this.battery <= 0) return;
+
+    lights_on()
+    this.is_on = true;
+  }
+
+  use_secondary() {
+    
+    this.battery += fps / 10;
+  }
+
+  battery_decay() {
+    if (this.is_on == false) return;
+    this.battery--;
+    if (this.battery <= 0) this.use_primary();
+  }
+
+  flash_enemies() {
+    if (this.is_on == false) return;
+    enemies_in_sight = shine(mouse_x, mouse_y, light_radius);
+
+
+    for (const i in enemies_in_sight) {
+      i.hit_by_light();
+    }
+  }
+}
+
+
+
+class Shotgun {
+  constructor() {
+    this.chambering = 0;
+    this.ammo = max_ammo;
+  }
+
+  use_primary() {
+    if (this.chambering > 0) return;
+    if (this.ammo <= 0) return;
+
+    enemies_hit = shoot(mouse_x, mouse_y, blast_radius);
 
     for (const i of enemies_hit) {
       i.hit();
     }
 
-    this.ammo--;
+    ammo--;
+    this.chambering = 1 * fps;
+  }
+
+  chamber_ammo(){
+
+    if (this.chambering > 0){
+      this.chambering --;
+  }
+
   }
 
   use_secondary() {
-    if (this.ammo <= 6) {
-      this.ammo++;
-    }
-  }
-}
-
-class Heal extends Item {
-  constructor(hp) {
-    super();
-    this.hp = hp;
-    this.quantity = 1;
-  }
-
-  use_primary(player) {
-    player.health++;
-  }
-
-  use_secondary() {
-    if (this.ammo <= 6) {
+    if (this.ammo < max_ammo) {
+      this.chambering = fps / 10;
       ammo++;
     }
   }
 }
 
+class Heal {
+  constructor(hp) {
+    this.hp = hp;
+    this.quantity = 1;
+  }
+
+  use_primary(player) {
+    if (this.quantity <= 0) return;
+    if (player.health >= max_hp) return;
+
+    player.health++;
+    this.quantity --;
+  }
+
+  use_secondary() {
+
+      return;
+    
+  }
+}
+
+
+
 let player = new Player();
 let shotgun = new Shotgun();
-let heal = new Heal(1);
+let heal = new Heal(effective_heal);
 let flashlight = new Flashlight();
 
 player.inventory.push(shotgun);
 player.inventory.push(heal);
+player.inventory.push(flashlight);
 
-let current_item = 0;
+let current_item;
 
 let mouse_x;
 let mouse_y;
@@ -112,10 +175,33 @@ document.addEventListener("keydown", (event) => {
   } else if (event.key == "e") {
     swap_to_right_scene();
   }
+  if (current_scene_id == SCENE_BAIXO) {
+
+    blast_radius = blast_radius_high;
+    light_radius = light_radius_high;
+    flashlight_radius = flashlight_radius_high;
+
+  } else {
+
+    blast_radius = blast_radius_low;
+    light_radius = light_radius_low;
+    flashlight_radius = flashlight_radius_low;
+
+
+  }
 });
 
+document.addEventListener("mousemove", (event) => {
+  get_mouse_pos();
+  if (flashlight.is_on == true ) move_flashlight(mouse_x, mouse_y);
+
+  flash_enemies();
+})
+
 function update() {
-  flashlight.battery_decay();
+
+  shotgun.chamber_ammo();
+  if (flashlight.is_on == true) flashlight.battery_decay();
 
   setTimeout(update, 1000 / fps);
 }
