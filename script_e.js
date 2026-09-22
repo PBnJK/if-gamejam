@@ -7,17 +7,20 @@ Horácio
 
 */
 
+play_button = document.getElementById("play");
+
 let on_menu = true;
 
 const max_hp = 2;
 const max_ammo = 6;
-const max_battery = 50;
+const max_battery = 150;
 const effective_heal = 1;
 const fps = 24;
 const blast_radius_low = 50;
 const blast_radius_high = 100;
 
 let blast_radius = blast_radius_low;
+
 
 const flashlight_radius_low = 150;
 const flashlight_radius_high = 350;
@@ -41,6 +44,7 @@ class Flashlight {
   }
 
   use_primary() {
+
     play_sound("assets/audio/sfx/on_off_flashlight.mp3");
 
     if (this.is_on == true) {
@@ -52,15 +56,17 @@ class Flashlight {
 
     if (this.battery <= 0) return;
 
-    lights_on();
+    light_on();
     this.is_on = true;
   }
 
   use_secondary() {
-    if (this.battery > max_battery) return;
+    
+    if (this.battery > max_battery || this.is_on == true) return;
     this.battery += fps / 2; // 500 coin batteries
     setTimeout(() => {}, 100 / fps);
     play_sound("assets/audio/sfx/add_battery.mp3");
+
   }
 
   battery_decay() {
@@ -73,11 +79,26 @@ class Flashlight {
     if (this.is_on == false) return;
     const enemies_in_sight = shine(mouse_x, mouse_y, light_radius);
 
-    for (const i of enemies_in_sight) {
-      i.hit_by_light();
+    if (enemies_in_sight.length != 0){
+      let seen = false;
+      for (const i of enemies_in_sight) {
+        if( i.seen ) {
+          seen = true;
+        } else {
+          i.seen = true;
+        }
+
+        i.hit_by_light();
+      }
+
+      if( seen ) {
+        play_sound("assets/audio/sfx/scare.mp3");
+      }
     }
   }
 }
+
+
 
 class Shotgun {
   constructor() {
@@ -91,25 +112,27 @@ class Shotgun {
 
     const enemies_hit = shoot(mouse_x, mouse_y, blast_radius);
 
+    muzzle_flash();
     play_sound("assets/audio/sfx/shotgun_shot.mp3");
     for (const i of enemies_hit) {
       i.hit();
       play_sound("assets/audio/sfx/bullet_hit.mp3");
     }
 
-    this.ammo--;
+   this.ammo--;
     this.chambering = 1 * fps;
 
+    
     setTimeout(() => {}, 300 / fps);
     play_sound("assets/audio/sfx/shotgun_shell.mp3");
-
-    muzzle_flash();
   }
 
-  chamber_ammo() {
-    if (this.chambering > 0) {
-      this.chambering--;
-    }
+  chamber_ammo(){
+
+    if (this.chambering > 0){
+      this.chambering --;
+  }
+
   }
 
   use_secondary() {
@@ -119,6 +142,8 @@ class Shotgun {
 
       ammo++;
       setTimeout(() => {}, 500 / fps);
+
+      
     }
   }
 }
@@ -135,19 +160,23 @@ class Heal {
 
     play_sound("assets/audio/sfx/injection.mp3");
     player.health++;
-    this.quantity--;
+    this.quantity --;
   }
 
   use_secondary() {
-    enemies_hit = shoot();
-    play_sound("assets/audio/sfx/throw_healing_item.mp3");
 
-    for (const i in enemies_hit) {
-      i.hit(5);
-    }
-    return;
+      enemies_hit = shoot();
+      play_sound("assets/audio/sfx/throw_healing_item.mp3");
+
+      for (const i in enemies_hit){
+        i.hit(5);
+      }
+      return;
+    
   }
 }
+
+
 
 let player = new Player();
 let shotgun = new Shotgun();
@@ -167,6 +196,10 @@ function get_mouse_pos(event) {
   mouse_x = event.clientX;
   mouse_y = event.clientY;
 }
+
+play_button.addEventListener("click", (e) => {
+  document.getElementById("menu").remove();
+})
 
 document.addEventListener("click", (e) => {
   get_mouse_pos(e);
@@ -188,30 +221,52 @@ document.addEventListener("keydown", (event) => {
     swap_to_right_scene();
   }
   if (current_scene_id == SCENE_BAIXO) {
+
     blast_radius = blast_radius_high;
     light_radius = light_radius_high;
     flashlight_radius = flashlight_radius_high;
+
   } else {
+
     blast_radius = blast_radius_low;
     light_radius = light_radius_low;
     flashlight_radius = flashlight_radius_low;
+
+
   }
 });
 
 document.addEventListener("mousemove", (event) => {
   get_mouse_pos(event);
-  if (flashlight.is_on == true) move_flashlight(mouse_x, mouse_y);
+  if (flashlight.is_on == true ) move_flashlight(mouse_x, mouse_y);
 
   flashlight.flash_enemies();
-});
+})
+
+
+
 
 function update() {
+
   shotgun.chamber_ammo();
   if (flashlight.is_on == true) flashlight.battery_decay();
 
+
   update_scene();
+  if (player.health <= 0){
+    clearInterval();
+
+    game_over = document.createElement('div');
+    game_over.id = "game_over";
+    game_over.innerText = "Game Over!";
+    document.body.insertBefore(game_over, document.body.childNodes[0].nextSibling);
+
+
+
+  }
+
 }
 
 setInterval(update, 1000 / fps);
 
-document.getElementById;
+document.getElementById
