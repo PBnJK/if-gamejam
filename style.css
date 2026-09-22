@@ -23,9 +23,9 @@ body {
 }
 
 #darkness {
-  display: block;
   width: 800px;
   height: 600px;
+  background-color: black;
 }
 
 .enemy {

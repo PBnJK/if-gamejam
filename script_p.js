@@ -242,10 +242,10 @@ function update_scene() {
 }
 
 function lights_on() {
-  darkness.style.display = "block";
+  move_flashlight(mouse_x, mouse_y);
 }
 
-function lights_off() {
+function light_off() {
   darkness.style.maskImage = "";
 }
 
@@ -258,3 +258,5 @@ function move_flashlight(x, y) {
 
 add_enemy_to_scene(SCENE_FRENTE, new Enemy("test", 0, 0, 0, 128, 128, 3, true));
 swap_to_scene(SCENE_FRENTE);
+
+lights_on();

@@ -39,7 +39,7 @@ class Flashlight {
   }
 
   use_primary() {
-    if (is_on == true) {
+    if (this.is_on == true) {
       light_off();
 
       this.is_on = false;
@@ -82,13 +82,12 @@ class Shotgun {
     if (this.chambering > 0) return;
     if (this.ammo <= 0) return;
 
-    enemies_hit = shoot(mouse_x, mouse_y, blast_radius);
-
+    const enemies_hit = shoot(mouse_x, mouse_y, blast_radius);
     for (const i of enemies_hit) {
       i.hit();
     }
 
-    ammo--;
+    this.ammo--;
     this.chambering = 1 * fps;
   }
 
@@ -103,7 +102,7 @@ class Shotgun {
       this.chambering = fps / 100;
       setTimeout(() => {}, 500 / fps);
 
-      ammo++;
+      this.ammo++;
     }
   }
 }
@@ -114,7 +113,7 @@ class Heal {
     this.quantity = 1;
   }
 
-  use_primary(player) {
+  use_primary() {
     if (this.quantity <= 0) return;
     if (player.health >= max_hp) return;
 
@@ -141,7 +140,7 @@ player.inventory.push(shotgun);
 player.inventory.push(heal);
 player.inventory.push(flashlight);
 
-let current_item;
+let current_item = 0;
 
 let mouse_x;
 let mouse_y;
@@ -185,7 +184,7 @@ document.addEventListener("mousemove", (event) => {
   get_mouse_pos(event);
   if (flashlight.is_on == true) move_flashlight(mouse_x, mouse_y);
 
-  flash_enemies();
+  flashlight.flash_enemies();
 });
 
 function update() {
