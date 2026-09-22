@@ -37,9 +37,7 @@ class Flashlight {
 
 
 class Item{
-    constructor(x_pos, y_pos){
-    this.x_pos = x_pos;
-    this.y_pos = y_pos;
+    constructor(){
 
     }
 
@@ -70,7 +68,7 @@ class Shotgun extends Item {
         enemies_hit = shoot();
 
         for(const i of enemies_hit){
-            i.health--;
+            i.hit();
         }
         
         ammo--;
@@ -119,7 +117,7 @@ class Heal extends Item{
 
 let player = new Player();
 let shotgun = new Shotgun();
-let heal = new Heal();
+let heal = new Heal(1);
 let flashlight = new Flashlight();
 
 player.inventory.push(shotgun);
@@ -166,11 +164,13 @@ document.addEventListener("keydown", (event) => {
 })
 
 function update(){
-
+    get_mouse_pos();
 
 
     flashlight.battery_decay();
 
+    
+    setTimeout( update ,1000/fps)
 }
 
 
