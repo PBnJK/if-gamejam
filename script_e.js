@@ -41,18 +41,18 @@ class Shotgun extends Item {
   }
 
   use_primary() {
-    enemies_hit = shoot();
+    const enemies_hit = shoot(mouse_x, mouse_y, 50);
 
     for (const i of enemies_hit) {
       i.hit();
     }
 
-    ammo--;
+    this.ammo--;
   }
 
   use_secondary() {
     if (this.ammo <= 6) {
-      ammo++;
+      this.ammo++;
     }
   }
 }
@@ -83,7 +83,7 @@ let flashlight = new Flashlight();
 player.inventory.push(shotgun);
 player.inventory.push(heal);
 
-let current_item;
+let current_item = 0;
 
 let mouse_x;
 let mouse_y;

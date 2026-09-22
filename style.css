@@ -6,9 +6,18 @@ body {
 }
 
 #wrapper {
-  background-color: black;
+  position: fixed;
+  background-color: yellow;
+
   width: 800px;
   height: 600px;
+}
+
+#darkness {
+  display: none;
+  width: 800px;
+  height: 600px;
+  background-color: black;
 }
 
 .enemy {
