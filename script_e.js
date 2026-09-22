@@ -10,109 +10,69 @@ Horácio
 const fps = 24;
 
 class Player {
-
-    health;
-
-    constructor(){
-
-        health = 2;
-    }
-
+  constructor() {
+    this.health = 2;
+    this.inventory = [];
+  }
 }
 
 class Flashlight {
+  constructor() {
+    this.battery = 60 * fps;
+  }
 
-    battery;
-    constructor(){
-        this.battery = 60 * fps;
-
-    }
-
-    battery_decay(){
-
-        battery --;
-
-    }
+  battery_decay() {
+    this.battery--;
+  }
 }
 
+class Item {
+  constructor() {}
 
-class Item{
-    constructor(){
+  use_primary() {}
 
-    }
-
-    use_primary(){
-
-
-    }
-
-    use_secondary(){
-
-
-    }
+  use_secondary() {}
 }
 
 class Shotgun extends Item {
+  constructor() {
+    super();
+    this.ammo = 6;
+  }
 
-    ammo;
+  use_primary() {
+    enemies_hit = shoot();
 
-    constructor(){
-
-        ammo = 6;
-        super();
+    for (const i of enemies_hit) {
+      i.hit();
     }
 
+    ammo--;
+  }
 
-    use_primary(){
-
-        enemies_hit = shoot();
-
-        for(const i of enemies_hit){
-            i.hit();
-        }
-        
-        ammo--;
-
+  use_secondary() {
+    if (this.ammo <= 6) {
+      ammo++;
     }
-
-    use_secondary(){
-
-
-        if (this.ammo <= 6) {
-            
-            ammo++
-        }
-    }
-
+  }
 }
 
-class Heal extends Item{
+class Heal extends Item {
+  constructor(hp) {
+    super();
+    this.hp = hp;
+    this.quantity = 1;
+  }
 
-    
+  use_primary(player) {
+    player.health++;
+  }
 
-
-    constructor(hp){
-        this.hp = hp;
-        this.quantity = 1;
-        super();
+  use_secondary() {
+    if (this.ammo <= 6) {
+      ammo++;
     }
-
-    use_primary(player){
-
-        player.health ++;
-
-    }
-
-    use_secondary(){
-
-
-        if (this.ammo <= 6) {
-            
-            ammo++
-
-        }
-    }
-
+  }
 }
 
 let player = new Player();
@@ -125,56 +85,39 @@ player.inventory.push(heal);
 
 let current_item;
 
-
 let mouse_x;
 let mouse_y;
 
-function get_mouse_pos(event){
-
-
-mouse_x = event.clientX;
-mouse_y = event.clientY;
-
+function get_mouse_pos(event) {
+  mouse_x = event.clientX;
+  mouse_y = event.clientY;
 }
 
-
-
-document.addEventListener("click", () => {
-    get_mouse_pos();
-    player.inventory[current_item].use_primary();
-
+document.addEventListener("click", (e) => {
+  get_mouse_pos(e);
+  player.inventory[current_item].use_primary();
 });
 
-div.addEventListener("contextmenu", (e) => {e.preventDefault()
+document.addEventListener("contextmenu", (e) => {
+  e.preventDefault();
 
-    get_mouse_pos();
-    player.inventory[current_item].use_secondary();
-    return false;
+  get_mouse_pos(e);
+  player.inventory[current_item].use_secondary();
+  return false;
 });
-
-
 
 document.addEventListener("keydown", (event) => {
-    if (event.key == "q") {
-        swap_to_left_scene();
-    }
-    else if (event.key == "e"){
-        swap_to_right_scene();
-    }
-})
+  if (event.key == "q") {
+    swap_to_left_scene();
+  } else if (event.key == "e") {
+    swap_to_right_scene();
+  }
+});
 
-function update(){
-    get_mouse_pos();
+function update() {
+  flashlight.battery_decay();
 
-
-    flashlight.battery_decay();
-
-    
-    setTimeout( update ,1000/fps)
+  setTimeout(update, 1000 / fps);
 }
 
-
-
-setTimeout( update ,1000/fps)
-
-
+setTimeout(update, 1000 / fps);

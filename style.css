@@ -10,3 +10,12 @@ body {
   width: 800px;
   height: 600px;
 }
+
+.enemy {
+  position: absolute;
+  user-select: none;
+}
+
+.enemy img {
+  pointer-events: none;
+}
