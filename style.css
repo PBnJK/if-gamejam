@@ -28,6 +28,14 @@ body {
   background-color: black;
 }
 
+#pov {
+  position: relative;
+  top: -256px;
+  left: 416px;
+
+  opacity: 0.25;
+}
+
 .enemy {
   position: absolute;
   user-select: none;

@@ -2,8 +2,7 @@ const SCENE_FRENTE = 0;
 const SCENE_LADO = 1;
 const SCENE_BAIXO = 2;
 
-const Z_MAX = 800;
-const Z_MIN = 0;
+const Z_MAX = 4.0;
 
 const DT_FRAME = 1000 / fps;
 const DEATH_TIME = 12 * DT_FRAME;
@@ -11,6 +10,7 @@ const DEATH_TICKS = DT_FRAME / DEATH_TIME;
 
 const wrapper = document.getElementById("wrapper");
 const darkness = document.getElementById("darkness");
+const pov = document.getElementById("pov");
 
 let static_enemy_id = 0;
 
@@ -38,6 +38,7 @@ class Enemy {
 
     this.off_x = 0;
     this.off_y = 0;
+    this.seen = false;
 
     this.health = health;
     this.photosensitive = photosensitive;
@@ -83,7 +84,12 @@ class Enemy {
   }
 
   move_forward(z) {
-    console.log(z);
+    this.z += z;
+    if (this.z > Z_MAX) {
+      this.z = Z_MAX;
+    }
+
+    this.element.style.transform = `scale(${this.z})`;
   }
 
   change_to_state(state) {
@@ -264,20 +270,59 @@ function update_scene() {
 }
 
 function lights_on() {
+  pov.setAttribute("src", "assets/player/flashlight/on.png");
   move_flashlight(mouse_x, mouse_y);
+  turn_lights_on();
+}
+
+function turn_lights_on() {
   wrapper.style.opacity = 1.0;
+  pov.style.opacity = 1.0;
 }
 
 function light_off() {
+  pov.setAttribute("src", "assets/player/flashlight/off.png");
+  turn_light_off();
+}
+
+function turn_light_off() {
   darkness.style.maskImage = "";
   wrapper.style.opacity = 0.1;
+  pov.style.opacity = 0.25;
+}
+
+function swap_weapon(curr_id) {
+  switch (curr_id) {
+    case 0 /* Shotgun */:
+      pov.setAttribute("src", "assets/player/shotgun/idle.png");
+      break;
+    case 1 /* Heal */:
+      pov.setAttribute("src", "assets/player/shotgun/idle.png");
+      break;
+    case 2 /* Flashlight */:
+      pov.setAttribute("src", "assets/player/flashlight/off.png");
+      break;
+  }
 }
 
 function move_flashlight(x, y) {
   const br = wrapper.getBoundingClientRect();
   const px = x - br.left;
   const py = y;
-  darkness.style.maskImage = `radial-gradient(circle at ${px}px ${py}px, transparent 0, #000000D8 ${flashlight_radius}px)`;
+  darkness.style.maskImage = `radial-gradient(circle at ${px}px ${py}px, transparent 0, #000000D0 ${flashlight_radius}px, #000000B0 ${flashlight_radius * 2}px)`;
+}
+
+let muzzle_flash_id = -1;
+function muzzle_flash() {
+  if (muzzle_flash_id !== -1) {
+    window.clearTimeout(muzzle_flash_id);
+  }
+
+  turn_lights_on();
+  muzzle_flash_id = window.setTimeout(() => {
+    muzzle_flash_id = -1;
+    turn_light_off();
+  }, 150);
 }
 
 function play_sound(src) {
@@ -289,7 +334,7 @@ function play_sound(src) {
 
 add_enemy_to_scene(
   SCENE_FRENTE,
-  new Enemy("eyeless", 0, 300, 0, 0, 200, 500, true),
+  new Enemy("eyeless", 0, 300, 1, 200, 500, 2, true),
 );
 swap_to_scene(SCENE_FRENTE);
 
