@@ -4,13 +4,12 @@
 document.addEventListener("keydown", function (teclado) {
   const numero = Number(teclado.key);
 
-  if (current_item == flashlight && numero != 3) lights_off();
+  if (current_item == flashlight && numero != 3) light_off();
 
-  if (numero >= 1 && numero <= player.invetory.length) {
-    current_item = player.inventory[numero - 1];
+  if (numero >= 1 && numero <= player.inventory.length) {
+    current_item = numero - 1;
     console.log(`Selecionado: ${current_item}`);
-    swap_weapon(numero - 1);
-    
+    swap_weapon(current_item);
   } else {
   }
 });

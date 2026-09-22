@@ -297,7 +297,7 @@ function swap_weapon(curr_id) {
       pov.setAttribute("src", "assets/player/shotgun/idle.png");
       break;
     case 1 /* Heal */:
-      pov.setAttribute("src", "assets/player/shotgun/idle.png");
+      pov.setAttribute("src", "assets/player/heal/idle.png");
       break;
     case 2 /* Flashlight */:
       pov.setAttribute("src", "assets/player/flashlight/off.png");
@@ -338,4 +338,4 @@ add_enemy_to_scene(
 );
 swap_to_scene(SCENE_FRENTE);
 
-light_off();
+turn_light_off();
