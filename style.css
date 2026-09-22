@@ -5,6 +5,15 @@ body {
   justify-content: center;
 }
 
+#container {
+  display: block;
+  width: 800px;
+  height: 600px;
+  overflow: hidden;
+
+  background-color: black;
+}
+
 #wrapper {
   position: fixed;
   background-color: yellow;
@@ -14,10 +23,9 @@ body {
 }
 
 #darkness {
-  display: none;
+  display: block;
   width: 800px;
   height: 600px;
-  background-color: black;
 }
 
 .enemy {

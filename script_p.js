@@ -8,12 +8,11 @@ const Z_MIN = 0;
 const wrapper = document.getElementById("wrapper");
 const darkness = document.getElementById("darkness");
 
-let flashlight_radius = 256;
-
 let static_enemy_id = 0;
 
 const EnemyState = {
   IDLE: 0,
+  DEAD: 9,
 };
 
 class Enemy {
@@ -83,12 +82,23 @@ class Enemy {
     console.log(z);
   }
 
-  change_to_idle() {
-    this.change_to_state("idle");
+  change_to_state(state) {
+    switch (state) {
+      case EnemyState.IDLE:
+        this.change_to_idle();
+        break;
+      case EnemyState.DEAD:
+        this.change_to_dead();
+        break;
+    }
   }
 
-  change_to_state(state) {
-    this.img_el.setAttribute("src", this.fetch_asset(state));
+  change_to_idle() {
+    this.frame("idle");
+  }
+
+  change_to_dead() {
+    this.frame("dead");
   }
 
   is_inside(x, y, r) {
@@ -99,16 +109,33 @@ class Enemy {
     return Math.abs(dx * dx + dy * dy) < dr * dr;
   }
 
-  hit() {
-    this.health--;
+  hit(damage = 1) {
+    this.health -= damage;
     if (this.health <= 0) {
-      remove_enemy_from_scene(this.scene, this.id);
+      this.change_to_dead();
     }
   }
 
   hit_by_light() {}
 
-  update() {}
+  update() {
+    switch (this.state) {
+      case EnemyState.IDLE:
+        update_idle();
+        break;
+      case EnemyState.DEAD:
+        update_dead();
+        break;
+    }
+  }
+
+  update_idle() {}
+
+  update_dead() {}
+
+  frame(to) {
+    this.img_el.setAttribute("src", this.fetch_asset(to));
+  }
 
   fetch_asset(name) {
     return `assets/enemy/${this.path}/${name}.png`;
@@ -219,20 +246,15 @@ function lights_on() {
 }
 
 function lights_off() {
-  darkness.style.display = "none";
+  darkness.style.maskImage = "";
 }
 
 function move_flashlight(x, y) {
   const br = wrapper.getBoundingClientRect();
   const px = x - br.left;
   const py = y;
-  darkness.style.maskImage = `radial-gradient(circle at ${px}px ${py}px, transparent 0, white ${flashlight_radius}px)`;
+  darkness.style.maskImage = `radial-gradient(circle at ${px}px ${py}px, transparent 0, #000000EF ${flashlight_radius}px)`;
 }
 
 add_enemy_to_scene(SCENE_FRENTE, new Enemy("test", 0, 0, 0, 128, 128, 3, true));
 swap_to_scene(SCENE_FRENTE);
-
-lights_on();
-document.addEventListener("mousemove", (e) => {
-  move_flashlight(e.clientX, e.clientY);
-});

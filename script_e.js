@@ -17,7 +17,6 @@ const blast_radius_high = 100;
 
 let blast_radius = blast_radius_low;
 
-
 const flashlight_radius_low = 128;
 const flashlight_radius_high = 256;
 let flashlight_radius = flashlight_radius_low;
@@ -40,7 +39,6 @@ class Flashlight {
   }
 
   use_primary() {
-
     if (is_on == true) {
       light_off();
 
@@ -50,12 +48,11 @@ class Flashlight {
 
     if (this.battery <= 0) return;
 
-    lights_on()
+    lights_on();
     this.is_on = true;
   }
 
   use_secondary() {
-    
     this.battery += fps / 10; // 500 coin batteries
   }
 
@@ -69,14 +66,11 @@ class Flashlight {
     if (this.is_on == false) return;
     enemies_in_sight = shine(mouse_x, mouse_y, light_radius);
 
-
     for (const i in enemies_in_sight) {
       i.hit_by_light();
     }
   }
 }
-
-
 
 class Shotgun {
   constructor() {
@@ -98,12 +92,10 @@ class Shotgun {
     this.chambering = 1 * fps;
   }
 
-  chamber_ammo(){
-
-    if (this.chambering > 0){
-      this.chambering --;
-  }
-
+  chamber_ammo() {
+    if (this.chambering > 0) {
+      this.chambering--;
+    }
   }
 
   use_secondary() {
@@ -127,22 +119,18 @@ class Heal {
     if (player.health >= max_hp) return;
 
     player.health++;
-    this.quantity --;
+    this.quantity--;
   }
 
   use_secondary() {
+    enemies_hit = shoot();
 
-      enemies_hit = shoot();
-
-      for (const i in enemies_hit){
-        i.hit(5);
-      }
-      return;
-    
+    for (const i in enemies_hit) {
+      i.hit(5);
+    }
+    return;
   }
 }
-
-
 
 let player = new Player();
 let shotgun = new Shotgun();
@@ -183,36 +171,29 @@ document.addEventListener("keydown", (event) => {
     swap_to_right_scene();
   }
   if (current_scene_id == SCENE_BAIXO) {
-
     blast_radius = blast_radius_high;
     light_radius = light_radius_high;
     flashlight_radius = flashlight_radius_high;
-
   } else {
-
     blast_radius = blast_radius_low;
     light_radius = light_radius_low;
     flashlight_radius = flashlight_radius_low;
-
-
   }
 });
 
 document.addEventListener("mousemove", (event) => {
-  get_mouse_pos();
-  if (flashlight.is_on == true ) move_flashlight(mouse_x, mouse_y);
+  get_mouse_pos(event);
+  if (flashlight.is_on == true) move_flashlight(mouse_x, mouse_y);
 
   flash_enemies();
-})
+});
 
 function update() {
-
   shotgun.chamber_ammo();
   if (flashlight.is_on == true) flashlight.battery_decay();
 
-
   update_scene();
-
 }
 
 setInterval(update, 1000 / fps);
+
