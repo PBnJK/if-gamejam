@@ -9,7 +9,7 @@ Horácio
 
 const max_hp = 2;
 const max_ammo = 6;
-const max_battery = 60;
+const max_battery = 1800;
 const effective_heal = 1;
 const fps = 24;
 const blast_radius_low = 50;
@@ -17,8 +17,8 @@ const blast_radius_high = 100;
 
 let blast_radius = blast_radius_low;
 
-const flashlight_radius_low = 128;
-const flashlight_radius_high = 256;
+const flashlight_radius_low = 150;
+const flashlight_radius_high = 350;
 let flashlight_radius = flashlight_radius_low;
 
 const light_radius_low = 75;
@@ -34,7 +34,7 @@ class Player {
 
 class Flashlight {
   constructor() {
-    this.battery = max_battery * fps;
+    this.battery = max_battery / fps;
     this.is_on = false;
   }
 
@@ -64,9 +64,9 @@ class Flashlight {
 
   flash_enemies() {
     if (this.is_on == false) return;
-    enemies_in_sight = shine(mouse_x, mouse_y, light_radius);
+    const enemies_in_sight = shine(mouse_x, mouse_y, light_radius);
 
-    for (const i in enemies_in_sight) {
+    for (const i of enemies_in_sight) {
       i.hit_by_light();
     }
   }

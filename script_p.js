@@ -5,6 +5,10 @@ const SCENE_BAIXO = 2;
 const Z_MAX = 800;
 const Z_MIN = 0;
 
+const DT_FRAME = 1000 / fps;
+const DEATH_TIME = 12 * DT_FRAME;
+const DEATH_TICKS = DT_FRAME / DEATH_TIME;
+
 const wrapper = document.getElementById("wrapper");
 const darkness = document.getElementById("darkness");
 
@@ -91,6 +95,8 @@ class Enemy {
         this.change_to_dead();
         break;
     }
+
+    this.state = state;
   }
 
   change_to_idle() {
@@ -99,6 +105,9 @@ class Enemy {
 
   change_to_dead() {
     this.frame("dead");
+
+    this.death_counter = DEATH_TIME;
+    this.death_opacity = 0.0;
   }
 
   is_inside(x, y, r) {
@@ -112,7 +121,7 @@ class Enemy {
   hit(damage = 1) {
     this.health -= damage;
     if (this.health <= 0) {
-      this.change_to_dead();
+      this.change_to_state(EnemyState.DEAD);
     }
   }
 
@@ -121,17 +130,26 @@ class Enemy {
   update() {
     switch (this.state) {
       case EnemyState.IDLE:
-        update_idle();
+        this.update_idle();
         break;
       case EnemyState.DEAD:
-        update_dead();
+        this.update_dead();
         break;
     }
   }
 
   update_idle() {}
 
-  update_dead() {}
+  update_dead() {
+    this.death_counter -= DT_FRAME;
+    if (this.death_counter < 0) {
+      remove_enemy_from_scene(this.scene, this.id);
+      return;
+    }
+
+    this.death_opacity += DEATH_TICKS;
+    this.element.style.opacity = this.death_opacity;
+  }
 
   frame(to) {
     this.img_el.setAttribute("src", this.fetch_asset(to));
@@ -144,6 +162,10 @@ class Enemy {
 
 let current_scene_id = 0;
 const scenes = [[], [], []];
+
+function lerp(x, y, t) {
+  return (1 - t) * x + t * y;
+}
 
 function init_scenes() {}
 
@@ -243,20 +265,32 @@ function update_scene() {
 
 function lights_on() {
   move_flashlight(mouse_x, mouse_y);
+  wrapper.style.opacity = 1.0;
 }
 
 function light_off() {
   darkness.style.maskImage = "";
+  wrapper.style.opacity = 0.1;
 }
 
 function move_flashlight(x, y) {
   const br = wrapper.getBoundingClientRect();
   const px = x - br.left;
   const py = y;
-  darkness.style.maskImage = `radial-gradient(circle at ${px}px ${py}px, transparent 0, #000000EF ${flashlight_radius}px)`;
+  darkness.style.maskImage = `radial-gradient(circle at ${px}px ${py}px, transparent 0, #000000D8 ${flashlight_radius}px)`;
 }
 
-add_enemy_to_scene(SCENE_FRENTE, new Enemy("test", 0, 0, 0, 128, 128, 3, true));
+function play_sound(src) {
+  const audio = new Audio(src);
+  audio.play().catch((e) => {
+    console.log("Error playing audio: ", e);
+  });
+}
+
+add_enemy_to_scene(
+  SCENE_FRENTE,
+  new Enemy("eyeless", 0, 300, 0, 0, 200, 500, true),
+);
 swap_to_scene(SCENE_FRENTE);
 
-lights_on();
+light_off();

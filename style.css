@@ -16,7 +16,7 @@ body {
 
 #wrapper {
   position: fixed;
-  background-color: yellow;
+  background-image: url(ASSETS/Cenarios/Cenario1Montado.png);
 
   width: 800px;
   height: 600px;
