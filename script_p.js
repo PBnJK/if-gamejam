@@ -2,7 +2,7 @@ const SCENE_FRENTE = 0;
 const SCENE_LADO = 1;
 const SCENE_BAIXO = 2;
 
-const Z_MAX = 4.0;
+const Z_MAX = 2.0;
 
 const DT_FRAME = 1000 / fps;
 const DEATH_TIME = 12 * DT_FRAME;
@@ -16,6 +16,9 @@ let static_enemy_id = 0;
 
 const EnemyState = {
   IDLE: 0,
+  ADVANCE: 1,
+  ATTACK: 2,
+  COOLDOWN: 3,
   DEAD: 9,
 };
 
@@ -36,6 +39,12 @@ class Enemy {
     this.r = Math.max(w, h);
     this.rect = undefined;
 
+    this.decision_start = DT_FRAME * fps;
+    this.walkies_start = (DT_FRAME * fps) / 2;
+    this.attack_counter_start = (DT_FRAME * fps) / 4;
+    this.cooldown_start = DT_FRAME * fps;
+    this.counter = 0;
+
     this.off_x = 0;
     this.off_y = 0;
     this.seen = false;
@@ -43,7 +52,8 @@ class Enemy {
     this.health = health;
     this.photosensitive = photosensitive;
 
-    this.state = this.element = this.create_base_element(w, h);
+    this.state = EnemyState.IDLE;
+    this.element = this.create_base_element(w, h);
     this.move_to(x, y);
   }
 
@@ -85,8 +95,13 @@ class Enemy {
 
   move_forward(z) {
     this.z += z;
+    console.log(this.z);
     if (this.z > Z_MAX) {
       this.z = Z_MAX;
+    }
+
+    if (this.z > this.z_goal) {
+      this.z = this.z_goal;
     }
 
     this.element.style.transform = `scale(${this.z})`;
@@ -96,6 +111,15 @@ class Enemy {
     switch (state) {
       case EnemyState.IDLE:
         this.change_to_idle();
+        break;
+      case EnemyState.ADVANCE:
+        this.change_to_advance();
+        break;
+      case EnemyState.ATTACK:
+        this.change_to_attack();
+        break;
+      case EnemyState.COOLDOWN:
+        this.change_to_cooldown();
         break;
       case EnemyState.DEAD:
         this.change_to_dead();
@@ -107,12 +131,30 @@ class Enemy {
 
   change_to_idle() {
     this.frame("idle");
+
+    this.counter = this.decision_start;
+  }
+
+  change_to_advance() {
+    this.z_goal = this.z + 0.25;
+    this.counter = this.walkies_start;
+  }
+  change_to_attack() {
+    this.frame("dead");
+
+    this.counter = this.attack_counter_start;
+  }
+
+  change_to_cooldown() {
+    this.frame("idle");
+
+    this.counter = this.cooldown_start;
   }
 
   change_to_dead() {
     this.frame("dead");
 
-    this.death_counter = DEATH_TIME;
+    this.counter = DEATH_TIME;
     this.death_opacity = 0.0;
   }
 
@@ -138,17 +180,68 @@ class Enemy {
       case EnemyState.IDLE:
         this.update_idle();
         break;
+      case EnemyState.ADVANCE:
+        this.update_advance();
+        break;
+      case EnemyState.ATTACK:
+        this.update_attack();
+        break;
+      case EnemyState.COOLDOWN:
+        this.update_cooldown();
+        break;
       case EnemyState.DEAD:
         this.update_dead();
         break;
     }
   }
 
-  update_idle() {}
+  update_idle() {
+    this.counter -= DT_FRAME;
+    console.log(this.counter);
+    if (this.counter < 0) {
+      const advance = randf() < 0.4;
+      if (advance) {
+        this.change_to_state(EnemyState.ADVANCE);
+      } else {
+        this.counter = this.decision_start;
+      }
+    }
+  }
+
+  update_advance() {
+    this.counter -= DT_FRAME;
+    if (this.counter < 0) {
+      this.move_forward(0.025);
+      if (this.z >= this.z_goal - 0.001) {
+        if (this.z >= Z_MAX - 0.001) {
+          this.change_to_state(EnemyState.ATTACK);
+        } else {
+          this.change_to_state(EnemyState.IDLE);
+        }
+      } else {
+        this.counter = this.walkies_start;
+      }
+    }
+  }
+
+  update_attack() {
+    this.counter -= DT_FRAME;
+    if (this.attack_counter < 0) {
+      player.hit();
+      return;
+    }
+  }
+
+  update_cooldown() {
+    this.counter -= DT_FRAME;
+    if (this.cooldown_counter < 0) {
+      this.change_to_state(EnemyState.ATTACK);
+    }
+  }
 
   update_dead() {
-    this.death_counter -= DT_FRAME;
-    if (this.death_counter < 0) {
+    this.counter -= DT_FRAME;
+    if (this.counter < 0) {
       remove_enemy_from_scene(this.scene, this.id);
       return;
     }
@@ -163,6 +256,24 @@ class Enemy {
 
   fetch_asset(name) {
     return `assets/enemy/${this.path}/${name}.png`;
+  }
+}
+
+class Eyeless extends Enemy {
+  constructor(x) {
+    super("eyeless", x, 200, 1, 200, 500, 3, false);
+  }
+}
+
+class Spread extends Enemy {
+  constructor(x) {
+    super("spread", x, 200, 1, 200, 500, 5, true);
+  }
+}
+
+class Stalker extends Enemy {
+  constructor(x) {
+    super("stalker", x, 200, 1, 200, 500, 10, false);
   }
 }
 
@@ -219,6 +330,12 @@ function swap_to_right_scene() {
   swap_to_scene(id);
 }
 
+const BG_IMG = [
+  "url(ASSETS/Cenarios/Cenario1Montado.png)",
+  "url(ASSETS/Cenarios/Cenario2.png)",
+  "url(ASSETS/Cenarios/Cenario3.png)",
+];
+
 function swap_to_scene(id) {
   while (wrapper.lastChild) {
     wrapper.removeChild(wrapper.lastChild);
@@ -229,6 +346,8 @@ function swap_to_scene(id) {
     wrapper.appendChild(e.element);
     e.change_to_idle();
   }
+
+  wrapper.style.backgroundImage = BG_IMG[id];
 
   current_scene_id = id;
 }
@@ -264,8 +383,10 @@ function shine(x, y, r) {
 }
 
 function update_scene() {
-  for (const e of get_current_scene()) {
-    e.update();
+  for (const s of scenes) {
+    for (const e of s) {
+      e.update();
+    }
   }
 }
 
@@ -277,7 +398,7 @@ function lights_on() {
 
 function turn_lights_on() {
   wrapper.style.opacity = 1.0;
-  pov.style.opacity = 1.0;
+  pov.style.filter = "";
 }
 
 function light_off() {
@@ -288,7 +409,7 @@ function light_off() {
 function turn_light_off() {
   darkness.style.maskImage = "";
   wrapper.style.opacity = 0.1;
-  pov.style.opacity = 0.25;
+  pov.style.filter = "brightness(0.2)";
 }
 
 function swap_weapon(curr_id) {
@@ -303,6 +424,36 @@ function swap_weapon(curr_id) {
       pov.setAttribute("src", "assets/player/flashlight/off.png");
       break;
   }
+}
+
+function spawn_enemy() {
+  const enemy_type = randf();
+  if (enemy_type < 0.6) {
+    spawn_eyeless(randi(0, 1));
+  } else if (enemy_type < 0.8) {
+    spawn_spread(randi(0, 1));
+  } else {
+    spawn_stalker();
+  }
+}
+
+function spawn_eyeless(scene_id) {
+  const x = randf() * 500.0 + 100.0;
+
+  const eyeless = new Eyeless(x);
+  add_enemy_to_scene(scene_id, eyeless);
+}
+
+function spawn_spread(scene_id) {
+  const x = randf() * 500.0 + 100.0;
+  const spread = new Spread(x);
+  add_enemy_to_scene(scene_id, spread);
+}
+
+function spawn_stalker() {
+  const x = randf() * 500.0 + 100.0;
+  const stalker = new Stalker(x);
+  add_enemy_to_scene(SCENE_FRENTE, stalker);
 }
 
 function move_flashlight(x, y) {
@@ -332,10 +483,19 @@ function play_sound(src) {
   });
 }
 
-add_enemy_to_scene(
-  SCENE_FRENTE,
-  new Enemy("eyeless", 0, 300, 1, 200, 500, 2, true),
-);
+const randf = Math.random;
+
+function randi(start, end) {
+  const n = randf();
+  if (typeof end === "undefined") {
+    end = start;
+    start = 0;
+  }
+
+  return Math.round(start + (end - start) * n);
+}
+
+spawn_enemy();
 swap_to_scene(SCENE_FRENTE);
 
 turn_light_off();
