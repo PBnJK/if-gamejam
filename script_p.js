@@ -95,7 +95,6 @@ class Enemy {
 
   move_forward(z) {
     this.z += z;
-    console.log(this.z);
     if (this.z > Z_MAX) {
       this.z = Z_MAX;
     }
@@ -173,7 +172,12 @@ class Enemy {
     }
   }
 
-  hit_by_light() {}
+  hit_by_light() {
+    this.health -= damage;
+    if (this.health <= 0) {
+      this.change_to_state(EnemyState.DEAD);
+    }
+  }
 
   update() {
     switch (this.state) {
@@ -197,7 +201,6 @@ class Enemy {
 
   update_idle() {
     this.counter -= DT_FRAME;
-    console.log(this.counter);
     if (this.counter < 0) {
       const advance = randf() < 0.4;
       if (advance) {
@@ -226,9 +229,9 @@ class Enemy {
 
   update_attack() {
     this.counter -= DT_FRAME;
-    if (this.attack_counter < 0) {
+    if (this.counter < 0) {
       player.hit();
-      return;
+      this.change_to_state(EnemyState.COOLDOWN);
     }
   }
 
@@ -269,11 +272,40 @@ class Spread extends Enemy {
   constructor(x) {
     super("spread", x, 200, 1, 200, 500, 5, true);
   }
+
+  update_advance() {
+    this.counter -= DT_FRAME;
+    if (this.counter < 0) {
+      this.move_forward(0.025);
+      if (this.z >= this.z_goal - 0.001) {
+        if (this.z >= Z_MAX - 0.001) {
+          if (this.scene === SCENE_FRENTE) {
+            spawn_spread(SCENE_LADO);
+            remove_enemy_from_scene(this.scene, this.id);
+          } else {
+            spawn_slime();
+            remove_enemy_from_scene(this.scene, this.id);
+          }
+        } else {
+          this.change_to_state(EnemyState.IDLE);
+        }
+      } else {
+        this.counter = this.walkies_start;
+      }
+    }
+  }
 }
 
 class Stalker extends Enemy {
   constructor(x) {
     super("stalker", x, 200, 1, 200, 500, 10, false);
+  }
+}
+
+class Slime extends Enemy {
+  constructor(x) {
+    super("slime", x, 200, 1, 800, 600, 3, true);
+    this.change_to_state(EnemyState.ATTACK);
   }
 }
 
@@ -352,6 +384,17 @@ function swap_to_scene(id) {
   current_scene_id = id;
 }
 
+function clear_scenes() {
+  for (let i = 0; i < scenes.length; ++i) {
+    for (let j = 0; j < scenes[i].length; ++j) {
+      const e = scenes[i][j];
+      e.element.remove();
+      delete e;
+    }
+    scenes[i].length = 0;
+  }
+}
+
 function get_current_scene() {
   return scenes[current_scene_id];
 }
@@ -413,6 +456,7 @@ function turn_light_off() {
 }
 
 function swap_weapon(curr_id) {
+  light_off();
   switch (curr_id) {
     case 0 /* Shotgun */:
       pov.setAttribute("src", "assets/player/shotgun/idle.png");
@@ -435,6 +479,8 @@ function spawn_enemy() {
   } else {
     spawn_stalker();
   }
+
+  setTimeout(spawn_enemy, 1000 * randi(5, 15));
 }
 
 function spawn_eyeless(scene_id) {
@@ -454,6 +500,12 @@ function spawn_stalker() {
   const x = randf() * 500.0 + 100.0;
   const stalker = new Stalker(x);
   add_enemy_to_scene(SCENE_FRENTE, stalker);
+}
+
+function spawn_slime() {
+  const x = randf() * 500.0 + 100.0;
+  const slime = new Slime(x);
+  add_enemy_to_scene(SCENE_BAIXO, slime);
 }
 
 function move_flashlight(x, y) {
@@ -496,6 +548,7 @@ function randi(start, end) {
 }
 
 spawn_enemy();
+
 swap_to_scene(SCENE_FRENTE);
 
 turn_light_off();
