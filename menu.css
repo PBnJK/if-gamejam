@@ -1,0 +1,48 @@
+@font-face {
+    font-family: creepy;
+
+    src: url("assets/Ghoul/Creepy.woff");
+}
+
+body {
+    background-color: black;
+    color: white;
+}
+
+h1 {
+
+    color: rgb(127, 2, 2);
+    font-family: creepy;
+
+    font-size: 42px;
+}
+
+#menu {
+    text-align: center;
+}
+
+#play {
+
+    color: rgb(127, 2, 2);
+    font-size: 22px;
+}
+
+p {
+    font-size: 14px;
+}
+
+h3 {
+    font-family: creepy;
+
+    font-size: 42px;
+}
+
+#game_over {
+    
+    font-size: 42px;
+    text-align: center;
+}
+
+#play_again {
+    color:rgb(127, 2, 2);
+}
